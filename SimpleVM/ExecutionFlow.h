@@ -7,15 +7,11 @@
 
 struct Context
 {
-	Stack* stack;
 	uint8_t* RIP;
 	std::size_t size_of_bytecode;
 	~Context()
 	{
-		if (stack)
-		{
-			delete stack;
-		}
+
 		RIP = 0;
 	}
 };
@@ -24,10 +20,9 @@ class ExecutionFlow : Handler {
 public:
 	ExecutionFlow(std::vector<UINT8> byte_code, const char* userPassword) : Handler{ new Stack() } {
 
-		ctx = new Context{ this->stack, NULL,byte_code.size() };
+		ctx = new Context{ NULL,byte_code.size() };
 		ctx->RIP = (std::uint8_t*)(malloc(byte_code.size()));
 		memcpy(ctx->RIP, byte_code.data(), byte_code.size());
-		Handler{ ctx->stack };
 		user_Password = userPassword;
 	};
 	ExecutionFlow() = default;
@@ -41,27 +36,27 @@ public:
 			switch (opcode)
 			{
 			case PUSH:
-				ctx->stack->push(*++ctx->RIP);
+				stack->push(*++ctx->RIP);
 				break;
 			case SUM:
 				result += (char)this->sum();
-				ctx->stack->clearStack();
+				stack->clearStack();
 				break;
 			case MUL:
 				result += (char)this->mul();
-				ctx->stack->clearStack();
+				stack->clearStack();
 				break;
 			case DIV:
 				result += (char)this->div();
-				ctx->stack->clearStack();
+				stack->clearStack();
 				break;
 			case XOR:
 				result += char(this->obfuscate( 0XF2));
-				ctx->stack->clearStack();
+				stack->clearStack();
 				break;
 			case END:
-				ctx->stack->clearStack();
-				ctx->stack->push_string(result.c_str());
+				stack->clearStack();
+				stack->push_string(result.c_str());
 				this->getFinalString();
 				break;
 			case CMPSTR:
@@ -88,7 +83,7 @@ public:
 		{
 			if (ctx->RIP)
 			{
-				free(ctx->RIP);
+				ctx->RIP = 0;
 			}
 			delete ctx;
 		}
